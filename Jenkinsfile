@@ -7,7 +7,7 @@ pipeline {
     stages {
         stage('Clone Git Project') {
             steps {
-                git url: 'https://github.com/hosseinkarjoo/Personal-Project-K8s-Kubeadm.git', branch: 'master, credentialsId: 'github_creds'
+                git url: 'https://github.com/hosseinkarjoo/Personal-Project-K8s-Kubeadm.git', branch: 'master', credentialsId: 'github_creds'
             }
         }
         stage('build'){
