@@ -10,6 +10,12 @@ pipeline {
                 git url: 'https://github.com/hosseinkarjoo/Personal-Project-K8s-Kubeadm.git', branch: 'master', credentialsId: 'github_creds'
             }
         }
+        stage('install Drivers and registry'){
+            steps{
+                sh'kubectl apply -k "github.com/kubernetes-sigs/aws-efs-csi-driver/deploy/kubernetes/overlays/stable/?ref=release-1.0"'
+                sh'sudo kubectl apply -f deployment-docker-reg.yml'
+            }
+        }
         stage('build'){
             steps{
                 sh'docker build -t master:31320/app:${BUILD_NUMBER} -t master:31320/app:latest ./app/'
@@ -19,18 +25,12 @@ pipeline {
         }
         stage('PUSH'){
            steps{
-                sh'sudo docker push /app:${BUILD_NUMBER}'
+                sh'sudo docker push master:31320/app:${BUILD_NUMBER}'
                 sh'sudo docker push master:31320/app:latest'
                 sh'sudo docker push master:31320/api:${BUILD_NUMBER}'
                 sh'sudo docker push master:31320/api:latest'
                 sh'sudo docker push master:31320/db:${BUILD_NUMBER}'
                 sh'sudo docker push master:31320/db:latest'
-            }
-        }
-        stage('install Drivers and registry'){
-            steps{
-                sh'kubectl apply -k "github.com/kubernetes-sigs/aws-efs-csi-driver/deploy/kubernetes/overlays/stable/?ref=release-1.0"'
-                sh'sudo kubectl apply -f deployment-docker-reg.yml'
             }
         }
         stage('run deployment'){
