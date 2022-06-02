@@ -29,7 +29,7 @@ spec:
   resources:
     requests:
       storage: 5Gi
-[root@c4df90f5fc1c docker-registry]# cat pv.yml 
+---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
