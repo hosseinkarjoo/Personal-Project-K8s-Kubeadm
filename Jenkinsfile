@@ -25,7 +25,7 @@ pipeline {
         stage('build'){
             steps{
                 sh'docker build -t master:31320/app:${BUILD_NUMBER} -t master:31320/app:latest ./app/'
-                sh'docker build -t master:31320/api:${BUILD_NUMBER} -t master: 31320/api:latest ./api/'
+                sh'docker build -t master:31320/api:${BUILD_NUMBER} -t master:31320/api:latest ./api/'
                 sh'docker build -t master:31320/db:${BUILD_NUMBER} -t master:31320/db:latest ./db/'
             }
         }
