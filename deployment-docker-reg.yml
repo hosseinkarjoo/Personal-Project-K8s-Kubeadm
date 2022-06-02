@@ -18,12 +18,6 @@ spec:
       storage: 5Gi
 
 ---
-kind: StorageClass
-apiVersion: storage.k8s.io/v1
-metadata:
-  name: efs-sc
-provisioner: efs.csi.aws.com
-[root@c4df90f5fc1c docker-registry]# cat pvc.yml 
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
