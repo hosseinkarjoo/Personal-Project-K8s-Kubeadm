@@ -27,6 +27,12 @@ pipeline {
                 sh'sudo docker push master:31320/db:latest'
             }
         }
+        stage('install Drivers and registry'){
+            steps{
+                sh'kubectl apply -k "github.com/kubernetes-sigs/aws-efs-csi-driver/deploy/kubernetes/overlays/stable/?ref=release-1.0"'
+                sh'sudo kubectl apply -f deployment-docker-reg.yml'
+            }
+        }
         stage('run deployment'){
             steps{
                 sh'sudo kubectl apply -f deployment-app.yml '
