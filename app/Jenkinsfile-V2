@@ -1,0 +1,39 @@
+pipeline {   
+  agent{      
+    node { label 'prod-stage'}     
+  }  
+  environment {     
+    DOCKERHUB_CREDENTIALS= credentials('hub_credentialsId')
+    dockerhubReg = "hosseinkarjoo/devops-training-app"
+  }    
+  stages {         
+    stage("Git Checkout"){           
+      steps{                
+	git credentialsId: 'github_creds', branch: Front-Stage, url: 'https://github.com/hosseinkarjoo/DevOps-Training-Full-Deployment.git'                 
+	echo 'Git Checkout Completed'            
+      }        
+    }
+    stage('Build Docker Image') { 
+      steps{                
+	sh 'sudo docker build -t dockerhubReg/dockerhubReg:$BUILD_NUMBER .'           
+        echo 'Build Image Completed'                
+      }           
+    }
+    stage('Login to Docker Hub') {         
+      steps{                            
+	sh 'echo $DOCKERHUB_CREDENTIALS_PSW | sudo docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'                 
+	echo 'Login Completed'                
+      }           
+    }               
+    stage('Push Image to Docker Hub') {         
+      steps{                            
+	sh 'sudo docker push dockerhubusername/dockerhubreponame:$BUILD_NUMBER'                 echo 'Push Image Completed'       
+      }           
+    }      
+  } //stages 
+  post{
+    always {  
+      sh 'docker logout'           
+    }      
+  }  
+} //pipeline

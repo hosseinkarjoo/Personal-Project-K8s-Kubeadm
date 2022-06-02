@@ -1,0 +1,6 @@
+flask
+flask-mysql
+requests
+cryptography
+Flask-Caching
+

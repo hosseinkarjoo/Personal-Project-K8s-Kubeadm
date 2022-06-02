@@ -1,0 +1,94 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-flask-db
+spec:
+  clusterIP: None
+  selector:
+    app: flask-db
+  ports:
+    - port: 3306
+      targetPort: 3306
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-db
+  labels:
+    app: flask-db
+spec:
+  replicas: 1
+#  serviceName: flask-db
+  selector:
+    matchLabels:
+      app: flask-db
+  template:
+    metadata:
+      labels:
+        app: flask-db
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+        - name: mysql
+          image: master:31320/db:master:31320
+          ports:
+            - name: tpc
+              protocol: TCP
+              containerPort: 3306
+          volumeMounts:
+            - name: hostfile
+              mountPath: /var/lib/mysql
+      volumes:
+      - name: hostfile
+        hostPath:
+          path: /tmp/mysqldir
+
+#        persistentVolumeClaim:
+#          claimName: efs-pvc
+          
+#---
+#apiVersion: v1
+#kind: PersistentVolumeClaim
+#metadata:
+#  name: efs-pvc
+#spec:
+#  accessModes:
+#    - ReadWriteMany
+#  storageClassName: "efs-sc" 
+#  resources:
+#    requests:
+#      storage: 1Gi
+      
+#---
+#apiVersion: v1
+#kind: PersistentVolume
+#metadata:
+#  name: efs-pv
+#spec:
+#  capacity:
+#    storage: 1Gi
+#  volumeMode: Filesystem
+#  accessModes:
+#    - ReadWriteMany
+#  persistentVolumeReclaimPolicy: Delete
+#  storageClassName: "efs-sc" 
+#  csi:
+#    driver: efs.csi.aws.com
+#    volumeHandle: fs-0de2b146a9cdfbd41
+
+#---
+#kind: StorageClass
+#apiVersion: storage.k8s.io/v1
+#metadata:
+#  name: efs-sc
+#provisioner: efs.csi.aws.com
+
+#---
+#apiVersion: storage.k8s.io/v1beta1
+#kind: CSIDriver
+#metadata:
+#  name: efs.csi.aws.com
+#spec:
+#  attachRequired: false
+
