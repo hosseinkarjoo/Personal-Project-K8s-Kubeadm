@@ -12,9 +12,9 @@ pipeline {
         }
         stage('install Drivers and registry'){
             steps{
-                sh'sudo kubectl apply -k "github.com/kubernetes-sigs/aws-efs-csi-driver/deploy/kubernetes/overlays/stable/?ref=release-1.0"'
                 script {
                     try {
+                        sh'sudo kubectl apply -k "github.com/kubernetes-sigs/aws-efs-csi-driver/deploy/kubernetes/overlays/stable/?ref=release-1.0"'
                     } catch (err) {
                         echo err.getMessage()
                     }
