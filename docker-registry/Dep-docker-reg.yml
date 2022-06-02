@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: private-repository-k8s
+  labels:
+    app: private-repository-k8s
+spec:
+  serviceName: "docker-reg"
+  replicas: 3
+  selector:
+    matchLabels:
+      app: private-repository-k8s
+  template:
+    metadata:
+      labels:
+        app: private-repository-k8s
+    spec:
+      containers:
+        - image: registry:2
+          name: private-repository-k8s
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5000
+          volumeMounts:
+          - name: efs-volume-1
+            mountPath: /var/lib/registry
+      volumes:
+        - name: efs-volume-1
+          persistentVolumeClaim:
+            claimName: efs-claim1

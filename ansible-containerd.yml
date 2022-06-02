@@ -1,0 +1,14 @@
+---
+- hosts: worker, master
+  become: true
+  remote_user: ec2-user
+  tasks:
+    - name: config ctr
+      copy:
+        src: config.toml
+        dest: /etc/containerd/config.toml
+
+    - name: restart containerd
+      service:
+        name: containerd
+        state: restarted

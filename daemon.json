@@ -1,0 +1,5 @@
+{
+   "exec-opts": ["native.cgroupdriver=systemd"],
+   "insecure-registries": ["private-repository-k8s:5000"]
+}
+

@@ -1,0 +1,60 @@
+---
+- hosts: bastion,worker,master
+  become: true
+  remote_user: ec2-user
+  tasks:
+    - name: install docker
+      yum:
+        name: docker
+        state: present
+
+    - name: start docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+    - name: copy daeon.jsion
+      copy:
+        src: ./daemon.json
+        dest: /etc/docker/daemon.json
+
+    - name: restart systemd
+      command: systemctl daemon-reload
+
+    - name: restart docker
+      command: systemctl restart docker
+
+
+    - name: stop docker
+      service:
+        name: docker
+        state: stopped
+
+    - name: install efs
+      yum:
+        name: amazon-efs-utils
+        state: present
+    - name: remove docker directory
+      file:
+        path: /var/lib/docker
+        state: absent
+        
+
+    - name: create mount directory
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: 0755
+      with_items:
+        - /mnt/docker-image
+        - /var/lib/docker
+    - name: mount docker to mnt
+      shell: mount --rbind /mnt/docker-image /var/lib/docker
+
+    - name: mount amazon efs to hosts
+      shell: mount -t efs -o tls {{ EFS_ID }}:/ /mnt/docker-image
+        
+    - name: start docker again
+      service:
+        name: docker
+        state: started

@@ -1,0 +1,11 @@
+---
+- hosts: reg-lb
+  become: true
+  remote_user: ec2-user
+  tasks:
+    - name:
+      yum:
+        name: ['nginx', 'openssl']
+        state: present
+
+    -

@@ -1,0 +1,101 @@
+---
+- hosts: jenkins
+  become: yes
+  remote_user: ec2-user
+  become_user: root
+  tasks:
+    - name: install dependencies
+      yum:
+        name: "{{ package }} "
+        state: present
+      vars:
+        package:
+        - wget
+        - java-1.8.0-openjdk-devel
+        - git
+    - name: create a tmp directory
+      file:
+        path: /tmp/jenkins-temp
+        state: directory      
+
+    - name: clone repo
+      git:
+        repo: https://github.com/hosseinkarjoo/Personal-Project-Jenkins-template.git
+        dest: /tmp/jenkins-temp
+
+    - name: Setup Jenkins Repo
+      get_url:
+        url: https://pkg.jenkins.io/redhat/jenkins.repo
+        dest: /etc/yum.repos.d/jenkins.repo
+    
+    - name: Import Jenkins Repo GPG key
+      rpm_key:
+        state: present
+        key: https://pkg.jenkins.io/redhat/jenkins.io.key
+ 
+    - name: install epel 
+      shell: "amazon-linux-extras install epel -y"
+
+    - name: install Jenkins
+      yum:
+        name: jenkins
+        state: present
+
+    - name: Temporarily Stop Jenkins
+      service: 
+        name: jenkins 
+        state: stopped
+  
+    - name: Delete Jenkins default dir
+      file:
+        state: absent
+        path: /var/lib/jenkins
+  
+    - name: Copy over cloned Jenkins /var/lib/jenkins
+      copy:
+        src: /tmp/jenkins-temp/jenkins
+        dest: /var/lib
+        remote_src: true
+
+#    - name : create jenkins dir
+#      file: 
+#        path: /var/lib/jenkins
+#        state: directory
+
+#    - name: unarchive
+#      unarchive:
+#        src: /tmp/jenkins.tar.gz
+#        dest: /var/lib/jenkins
+#        remote_src: true
+        
+         
+    - name: Restore jenkins user ownership on /var/lib/jenkins
+      file:
+        path: /var/lib/jenkins
+        state: directory
+        recurse: yes
+        owner: jenkins
+
+    - name: change host ip config.xml
+      replace:
+        path: /var/lib/jenkins/nodes/Slave/config.xml
+        regexp: 'Slave-IP'
+        replace: "{{ BASTION_PRV }}"
+
+#    - name: replace host with ip
+#      replace: 
+#        path: /var/lib/jenkins/nodes/Slave-Compute/config.xml
+#        regexp: 'slave-compute.hkarjoo.com'
+#        replace: "{{ slave_prv_ip }}"
+
+#    - name: replace host with ip
+#      replace:
+#        path: /var/lib/jenkins/nodes/logging/config.xml
+#        regexp: 'logging-stack.hkarjoo.com'
+#        replace: "{{ logging_prv_ip }}"   
+
+    - name: Start Jenkins
+      service:
+        name: jenkins
+        state: started
+        enabled: yes

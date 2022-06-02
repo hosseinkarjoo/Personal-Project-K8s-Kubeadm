@@ -1,0 +1,38 @@
+---
+- hosts: lb
+  become: true
+  remote_user: ec2-user
+  tasks:
+    - name: install nginx
+      shell: amazon-linux-extras install nginx1 -y
+    
+    - name: start and enable nginx
+      service: name=nginx state=started enabled=true
+
+    - name: make directories
+      file:
+        path: "{{item}}"
+        state: directory
+      with_items: 
+        - /etc/nginx/sites-available
+        - /etc/nginx/sites-enabled
+
+    - name: replace nginx config file
+      copy: src=./nginx.conf dest=/etc/nginx/nginx.conf
+
+    - name: replace proxy config
+      copy: src=./proxy-config dest=/etc/nginx/sites-available/proxy-config
+
+    - name: create sim link
+      shell: ln -s /etc/nginx/sites-available/proxy-config /etc/nginx/sites-enabled/proxy-config
+
+    - name: check nginx config
+      shell: nginx -t
+      register: nginx_check
+
+    - name: debug nginx config
+      debug: 
+        msg: "{{nginx_check}}"
+
+    - name: restart nginx
+      service: name=nginx state=restarted 

@@ -1,0 +1,349 @@
+---
+- hosts: all
+  become: true
+  remote_user: ec2-user
+  tasks:
+    - name: create default profile for aws cli
+      file:
+        path: /root/.aws
+        state: directory
+
+    - name: copy prfile
+      copy:
+        src: ./files/aws_creds
+        dest: /root/.aws/credentials    
+
+    - name: clear the hosts file
+      shell: cat /etc/hosts | head -n 2 | > /etc/hosts
+
+    - name: hosts
+      shell: echo "127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4" >> /etc/hosts && echo "::1         localhost localhost.localdomain localhost6 localhost6.localdomain6" >> /etc/hosts
+     
+
+    - name: hostname
+      hostname:
+        name: "{{ inventory_hostname }}"
+
+    - name: add hostname to hosts
+      lineinfile:
+        path: /etc/hosts
+        line: "{%for host in groups['worker']%}{{hostvars[host]['ansible_facts']['eth0']['ipv4']['address']}}  {{hostvars[host]['ansible_facts']['hostname']}}\n{% endfor %}"
+
+    - name: add hostname to hosts
+      lineinfile:
+        path: /etc/hosts
+        line: "{%for host in groups['master']%}{{hostvars[host]['ansible_facts']['eth0']['ipv4']['address']}}  {{hostvars[host]['ansible_facts']['hostname']}}\n{% endfor %}"
+
+    - name: add cluster name to hsts
+      lineinfile:
+        path: /etc/hosts
+        line: "{{hostvars['master']['ansible_facts']['eth0']['ipv4']['address']}} k8s.Cluster.local"
+
+- hosts: worker,master
+  become: true
+  remote_user: ec2-user
+  tasks:
+    - name: install docker
+      yum:
+        name: ["docker", "iproute-tc"]
+        state: present
+    
+    - name: copy daemon.json
+      copy:
+        src: ./daemon.json
+        dest: /etc/docker/daemon.json
+
+    - name: start docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: kubernetes repo
+      yum_repository:
+        name: kubernetes
+        description: repo-kube
+        baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-\$basearch
+#        state: present
+        enabled: yes
+        gpgcheck: no
+        repo_gpgcheck: no
+        gpgkey: https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+
+    - name: install kubelet kubeadm
+      yum:
+        name: ["kubelet", "kubeadm"]
+        state: present
+      with_items:
+        - kubelet
+        - kubeadm
+      
+    - name: start kubelet
+      service:
+        name: kubelet
+        state: started
+        enabled: true
+
+    - name: disable selinux
+      shell: |
+        setenforce 0 
+        sed -i 's/^SELINUX=.*/SELINUX=permissive/g' /etc/selinux/config
+
+    - name: swap off
+      shell: sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab && swapoff -a
+
+    - name: config sysctl
+      shell: modprobe overlay && modprobe br_netfilter
+
+    - name: config kubectl
+      shell: | 
+        cat <<EOF > /etc/sysctl.d/k8s.conf
+        net.bridge.bridge-nf-call-ip6tables = 1
+        net.bridge.bridge-nf-call-iptables = 1
+        net.ipv4.ip_forward = 1
+        EOF
+
+    - name: restart daemon
+      shell: systemctl daemon-reload
+     
+   
+    - name: iptables off
+      shell: iptables -F
+
+    - name: config ctr
+      copy:
+        src: config.toml
+        dest: /etc/containerd/config.toml
+
+    - name: restart containerd
+      service:
+        name: containerd
+        state: restarted
+
+#    - name: create mount directory
+#      file:
+#        path: "{{ item }}"
+#        state: directory
+#        mode: 0755
+#      with_items:
+#        - /mnt/docker-image
+#        - /var/lib/docker
+#    - name: mount docker to mnt
+#      shell: mount --rbind /mnt/docker-image /var/lib/docker
+
+#    - name: mount amazon efs to hosts
+#      shell: mount -t efs -o tls {{ EFS_ID }}:/ /mnt/docker-image
+
+
+- hosts: master
+  become: true
+  remote_user: ec2-user
+  tasks:
+    - name: install kubectl
+      yum:
+        name: kubectl
+        state: present
+
+    - name: check the cluster
+      shell: ls /etc/kubernetes/admin.conf
+      register: cluster_exists
+      ignore_errors: yes
+
+    - name: iinitialize cluster
+      shell: kubeadm init --pod-network-cidr=10.244.0.0/16
+      args:
+        chdir: $HOME
+      when: cluster_exists is failed
+    
+
+    - name: .kube
+      file:
+        path: $HOME/.kube
+        state: directory
+        mode: 0755
+
+    - name: copy admin.cong
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: $HOME/.kube/config
+        remote_src: yes
+        mode: 0755
+
+    - name: install Pod network
+      shell: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+      args:
+        chdir: $HOME
+
+    - name: generate join token
+      shell: kubeadm token create --print-join-command
+      register: join_command_raw
+
+    - name: set join command
+      set_fact:
+        join_command: "{{ join_command_raw.stdout_lines[0] }}"
+
+    - name: copy join comand to local
+      local_action: copy content="{{ join_command_raw.stdout_lines[0] }}" dest="/tmp/kube-join-command" mode=777
+
+    - name: scp
+      fetch:
+        src: /root/.kube/config
+        dest: /tmp/kube-config
+
+- hosts: worker
+  become: true
+  remote_user: ec2-user
+  tasks:
+    - name: check the cluster
+      shell: ls /etc/kubernetes/kubelet.conf
+      register: joined
+      ignore_errors: yes
+
+    - name: join workers
+      copy:
+        src: /tmp/kube-join-command
+        dest: /tmp/kube-join-command
+    - name: run join
+      command: sh /tmp/kube-join-command
+      when: joined is failed
+
+
+
+- hosts: bastion
+  become: true
+  remote_user: ec2-user
+  tasks:
+    - name: install dependencies
+      yum:
+        name: ['java-1.8.0-openjdk-devel', 'wget', 'git']
+        state: present
+
+    - name: Install Docker on amzn
+      yum:
+        name: docker
+        state: present
+    - name: copy daemon.json
+      copy:
+        src: ./daemon.json
+        dest: /etc/docker/daemon.json
+    - name: restart daemon
+      shell: systemctl daemon-reload
+
+    - name: start docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: add jekins user
+      user:
+        name: jenkins
+        password: 123@qwer
+        home: /var/lib/jenkins
+        state: present
+        createhome: yes
+
+    - name: add to sudoers
+      copy:
+        dest: /etc/sudoers.d/jenkins
+        content: "jenkins ALL=(ALL) NOPASSWD: ALL"
+    - name: make direcotry
+      file:
+        path: /var/lib/jenkins/.ssh
+        state: directory
+        mode: 0755
+    - name: create empty file
+      file:
+        path: /var/lib/jenkins/.ssh/authorized_keys
+        state: touch
+        mode: 0755
+    - name: put pubkey
+      lineinfile:
+        path: /var/lib/jenkins/.ssh/authorized_keys
+        line: "{{ lookup('file', '/root/.ssh/id_rsa.pub') }}"
+    - name: restart docker
+      command: systemctl restart docker
+
+
+    - name: chmod docker.sock
+      file: path=/var/run/docker.sock mode=666
+
+    - name: kubernetes repo
+      yum_repository:
+        name: kubernetes
+        description: repo-kube
+        baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-\$basearch
+#        state: present
+        enabled: yes
+        gpgcheck: no
+        repo_gpgcheck: no
+        gpgkey: https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+#        exclude: kubeadm kubelet kubectl
+
+    - name: install kubectl
+      yum:
+        name: kubectl
+        state: present
+
+    - name: copy private key to bastion
+      copy:
+        src: /root/.ssh/id_rsa
+        dest: /home/ec2-user/my-key
+        mode: 0400
+    - name: remove .kube
+      file: 
+        path: /root/.kube
+        state: absent
+
+    - name: kube dir
+      file:
+        path: /root/.kube
+        state: directory       
+    - name: copy config
+      copy:
+        src: /tmp/kube-config/master/root/.kube/config
+        dest: /root/.kube/config
+
+
+- hosts: lb
+  become: true
+  remote_user: ec2-user
+  tasks:
+    - name: install nginx
+      shell: amazon-linux-extras install nginx1 -y
+   
+    - name: start and enable nginx
+      service: name=nginx state=started enabled=true
+
+    - name: make directories
+      file:
+        path: "{{item}}"
+        state: directory
+      with_items:
+        - /etc/nginx/sites-available
+        - /etc/nginx/sites-enabled
+
+    - name: replace nginx config file
+      copy: src=./nginx.conf dest=/etc/nginx/nginx.conf
+
+    - name: replace proxy config
+      copy: src=./proxy-config dest=/etc/nginx/sites-available/proxy-config
+    - name: replace the jenkins ip
+      replace:
+        path: /etc/nginx/sites-available/proxy-config
+        regexp: JENKINS_PRV
+        replace: "{{JENIKINS_PRV}}"
+
+    - name: create sim link
+      shell: ln -s /etc/nginx/sites-available/proxy-config /etc/nginx/sites-enabled/proxy-config
+
+#    - name: check nginx config
+#      shell: sudo nginx -t
+#      register: nginx_check
+
+#    - name: debug nginx config
+#      debug:
+#        msg: "{{nginx_check}}"
+
+    - name: restart nginx
+      service: name=nginx state=restarted
