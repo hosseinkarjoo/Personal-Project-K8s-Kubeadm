@@ -13,6 +13,12 @@ pipeline {
         stage('install Drivers and registry'){
             steps{
                 sh'sudo kubectl apply -k "github.com/kubernetes-sigs/aws-efs-csi-driver/deploy/kubernetes/overlays/stable/?ref=release-1.0"'
+                script {
+                    try {
+                    } catch (err) {
+                        echo err.getMessage()
+                    }
+                }
                 sh'sudo kubectl apply -f deployment-docker-reg.yml'
             }
         }
