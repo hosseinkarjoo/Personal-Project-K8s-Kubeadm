@@ -308,6 +308,37 @@
       copy:
         content: "{{EFS_ID}}"
         dest: /tmp/efsid
+  
+    - name: PATH /usr/local/bin
+      shell: echo 'PATH=$PATH:/usr/local/bin' >> ~/.bashrc &&  source ~/.bashrc
+
+    - name: PATH shell
+      shell: PATH=$PATH:/usr/local/bin
+
+    - name: check PATH
+      shell: echo $PATH && whoami
+      register: check_path
+
+    - name: debug PATH
+      debug: 
+        var: check_path.stdout
+
+    - name: check for helm existance
+      shell: which /usr/local/bin/helm
+      register: helm_exists
+      ignore_errors: true
+
+    - name: install helm
+      get_url:
+        url: https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+        dest: /tmp/get_helm.sh
+        mode: 0700
+      when: helm_exists is failed
+
+    - name: run helm shell
+      shell: /bin/bash /tmp/get_helm.sh
+      when: helm_exists is failed
+
 
 - hosts: lb
   become: true
@@ -342,8 +373,15 @@
       debug:
         msg: "{{JENKINS_PRV}}"
 
+    - name: check link
+      shell: ls /etc/nginx/sites-enabled/proxy-config
+      register: link_exists
+      ignore_errors: true
+
+
     - name: create sim link
       shell: ln -s /etc/nginx/sites-available/proxy-config /etc/nginx/sites-enabled/proxy-config
+      when: link_exists is failed
 
 #    - name: check nginx config
 #      shell: sudo nginx -t
