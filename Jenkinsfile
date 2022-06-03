@@ -43,6 +43,15 @@ pipeline {
                 sh'sudo docker push master:31320/db:latest'
             }
         }
+        stage ('Change The BUILD NUMBERRR') {
+            steps {
+                script {
+                    sh 'sed -ie "s/BUILDNUMBER/${BUILD_NUMBER}/g" deployment-app.yml'
+                    sh 'sed -ie "s/BUILDNUMBER/${BUILD_NUMBER}/g" deployment-api.yml'
+                    sh 'sed -ie "s/BUILDNUMBER/${BUILD_NUMBER}/g" deployment-db.yml'
+                }
+            }
+        }
         stage('run deployment'){
             steps{
                 sh'sudo kubectl apply -f deployment-app.yml '
