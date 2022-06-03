@@ -5,7 +5,7 @@ pipeline {
         }
     }
     environment{
-        efsID = readfile '/tmp/efsid'
+        efsID = readFile '/tmp/efsid'
     }
     stages {
         stage('Clone Git Project') {
