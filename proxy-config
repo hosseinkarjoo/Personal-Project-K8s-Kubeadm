@@ -4,7 +4,7 @@
     
     server {
         client_max_body_size 0;
-        listen 8080;
+        listen 80;
 #        listen 443 ssl;
         server_name  Jenkins;
 #        ssl_certificate         /etc/nginx/nexus.crt;

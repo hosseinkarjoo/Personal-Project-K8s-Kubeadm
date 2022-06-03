@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+echo 'PATH=$PATH:/usr/local/bin' >> ~/.bashrc && source ~/.bashrc
+if which terraform
+then
+  echo $(terraform version)
+  sleep 2
+else
+  if echo $PATH | grep /usr/bin:
+  then 
+    echo found PATH /use/bin
+    echo installing dependencies:
+    sudo yum install -y yum-utils
+    sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo
+    sudo yum -y install terraform
+#    m
+    if which terraform
+    then
+      echo "TERRAFORM IS INSTALLED"
+      sleep 2
+    else
+      echo "ERROR terraform is not installed (check your PATH)"
+      sleep 2
+    fi
+  else
+    "echo add /usr/bin to PATH"
+     sleep 2
+  fi
+fi
+if which ansible
+then
+  echo "ansible version"
+  sleep 2
+else
+  sudo yum install ansible -y
+  if which ansible
+  then
+    echo "ANSIBLE IS INSTALLED"
+    echo $(ansible --version)
+    sleep 2
+  else
+    echo "ERROR ansible is not installed (check your PATH)"
+    sleep 2
+  fi
+fi
+if which aws
+then
+  echo "AWS cli is installed"
+  sleep 2
+else
+  if which pip3 
+  then
+    echo "PIP3 is installed"
+    sleep 2
+  else
+    sudo yum install python3-pip -y
+  fi
+  sudo pip3 install awscli
+  if which aws
+  then
+    echo "AWSCLI IS INSTALLED"
+    echo $(aws version)
+    sleep 2
+  else
+    echo "ERROR awscli is not installed (check your PATH)"
+  fi
+fi

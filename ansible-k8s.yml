@@ -312,8 +312,8 @@
     - name: install nginx
       shell: amazon-linux-extras install nginx1 -y
    
-    - name: start and enable nginx
-      service: name=nginx state=started enabled=true
+#    - name: start and enable nginx
+#      service: name=nginx state=started enabled=true
 
     - name: make directories
       file:
@@ -332,7 +332,11 @@
       replace:
         path: /etc/nginx/sites-available/proxy-config
         regexp: JENKINS_PRV
-        replace: "{{JENIKINS_PRV}}"
+        replace: "{{JENKINS_PRV}}"
+
+    - name: debug nginx config
+      debug:
+        msg: "{{JENKINS_PRV}}"
 
     - name: create sim link
       shell: ln -s /etc/nginx/sites-available/proxy-config /etc/nginx/sites-enabled/proxy-config
