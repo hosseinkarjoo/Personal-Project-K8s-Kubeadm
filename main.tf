@@ -117,7 +117,14 @@ resource "aws_security_group" "public" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
+  ingress {
+    description = "allow anyone on port 8090 grafana"
+    from_port   = 8090
+    to_port     = 8090
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  
   ingress {
     description = "allow anyone on port 8443"
     from_port   = 8443
