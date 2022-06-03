@@ -29,10 +29,12 @@ pipeline {
         stage(wait for registry to be ready){
             steps{
                 script{
-                    sh'until curl http://master:31320
-                       do
-                         sleep 5
-                       done'
+                    sh''' #!/bin/bash
+                            until curl http://master:31320
+                            do
+                              sleep 5
+                            done
+                    '''
                 }
             }
         }
