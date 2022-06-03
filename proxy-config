@@ -22,6 +22,19 @@ server {
     }
 }
 
+upstream grafana {
+    server WORKER1:32101;
+    server WORKER2:32101;
+    server WORKER3:32101;
+}
+
+server {
+    listen     8090;
+    location / {
+        proxy_pass http://grafana;
+    }
+}
+
 upstream flaskapi {
     server WORKER1:32001;
     server WORKER2:32001;
