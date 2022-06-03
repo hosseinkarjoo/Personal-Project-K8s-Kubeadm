@@ -134,8 +134,8 @@
  version = 2
 [plugins."io.containerd.grpc.v1.cri".registry]
   [plugins."io.containerd.grpc.v1.cri".registry.mirrors]
-    [plugins."io.containerd.grpc.v1.cri".registry.mirrors."private-repository-k8s:5000"]
-      endpoint = ["http://private-repository-k8s:5000"]
+    [plugins."io.containerd.grpc.v1.cri".registry.mirrors."master:31320"]
+      endpoint = ["http://master:31320"]
   [plugins."io.containerd.grpc.v1.cri".registry.configs]
-    [plugins."io.containerd.grpc.v1.cri".registry.configs."private-repository-k8s:5000".tls]
+    [plugins."io.containerd.grpc.v1.cri".registry.configs."master:31320.tls]
       insecure_skip_verify = true
