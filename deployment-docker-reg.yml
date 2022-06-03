@@ -46,7 +46,7 @@ spec:
     - tls
   csi:
     driver: efs.csi.aws.com
-    volumeHandle: ${efsID}
+    volumeHandle: efsID
 
 ---
 apiVersion: apps/v1
