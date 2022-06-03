@@ -31,7 +31,7 @@ spec:
       terminationGracePeriodSeconds: 10
       containers:
         - name: mysql
-          image: master:31320/db:BUIDNUMBER
+          image: master:31320/db:BUILDNUMBER
           ports:
             - name: tpc
               protocol: TCP
