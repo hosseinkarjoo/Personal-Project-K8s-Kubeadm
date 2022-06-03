@@ -26,6 +26,16 @@ pipeline {
                 sh'sudo kubectl apply -f deployment-docker-reg.yml'
             }
         }
+        stage(wait for registry to be ready)
+            steps{
+                script{
+                    sh'until curl http://master:31320
+                       do
+                         sleep 5
+                       done'
+                }
+            }
+        }
         stage('build'){
             steps{
                 sh'docker build -t master:31320/app:${BUILD_NUMBER} -t master:31320/app:latest ./app/'
