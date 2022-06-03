@@ -304,6 +304,10 @@
         src: /tmp/kube-config/master/root/.kube/config
         dest: /root/.kube/config
 
+    - name: copy jenkins efs id
+      copy:
+        content: "{{EFS_ID}}"
+        dest: /tmp/efsid
 
 - hosts: lb
   become: true

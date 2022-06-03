@@ -111,6 +111,14 @@ resource "aws_security_group" "public" {
   }
 
   ingress {
+    description = "allow anyone on port 8080"
+    from_port   = 8081
+    to_port     = 8081
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
     description = "allow anyone on port 8443"
     from_port   = 8443
     to_port     = 8443

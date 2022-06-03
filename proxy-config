@@ -1,41 +1,37 @@
-    upstream jenkins {
-        server JENKINS_PRV:8080;
-    }   
-    
-    server {
-        client_max_body_size 0;
-        listen 80;
-#        listen 443 ssl;
-        server_name  Jenkins;
-#        ssl_certificate         /etc/nginx/nexus.crt;
-#        ssl_certificate_key     /etc/nginx/nexus.key;
-#        ssl_trusted_certificate /etc/nginx/ca.crt;
+upstream jenkins {
+    server JENKINS_PRV:8080;
+}
 
-        location / {
-            proxy_pass http://jenkins;
-#            proxy_redirect http://JENKINS_PRV/ http://JENKINS_PRV:8080/;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-        }
+server {
+    listen     8080;
+    location / {
+        proxy_pass http://jenkins;
     }
+}
 
-#    server {
-#        client_max_body_size 0;
-#        listen 80;
-#        listen 8443 ssl;
-#        server_name  nexus-api-reg;
-#        ssl_certificate         /etc/nginx/nexus.crt;
-#        ssl_certificate_key     /etc/nginx/nexus.key;
-#        ssl_trusted_certificate /etc/nginx/ca.crt;
-        
-#        location / {
-#            proxy_pass http://c4df90f5fc3c.mylabserver.com:8082/;
-#            proxy_set_header Host $host;
-#            proxy_set_header X-Real-IP $remote_addr;
-#            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-#            proxy_set_header X-Forwarded-Proto "https";
-#        }
-#    }
+upstream flaskapp {
+    server WORKER1:32000;
+    server WORKER2:32000;
+    server WORKER3:32000;
+}
+
+server {
+    listen     80;
+    location / {
+        proxy_pass http://flaskapp;
+    }
+}
+
+upstream flaskapi {
+    server WORKER1:32001;
+    server WORKER2:32001;
+    server WORKER3:32001;
+}
+
+server {
+    listen     8081;
+    location / {
+        proxy_pass http://flaskapi;
+    }
+}
 
