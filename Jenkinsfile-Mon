@@ -16,9 +16,9 @@ pipeline {
         stage('install Drivers and registry'){
             steps{
                 script {
-                        sh'helm repo add prometheus-community https://prometheus-community.github.io/helm-charts'
-                        sh'helm repo update'
-                        sh'helm install kube-prometheus-stack prometheus-community/kube-prometheus-stack'
+                        sh'sudo helm repo add prometheus-community https://prometheus-community.github.io/helm-charts'
+                        sh'sudo helm repo update'
+                        sh'sudo helm install kube-prometheus-stack prometheus-community/kube-prometheus-stack'
                 }
             }
         }
