@@ -4,6 +4,8 @@ pipeline {
             label 'prod'
         }
     }
+    environment{
+        efsID = readfile '/tmp/efsid'
     stages {
         stage('Clone Git Project') {
             steps {
