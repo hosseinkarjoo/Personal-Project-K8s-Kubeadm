@@ -27,7 +27,7 @@ kind: Service
 metadata:
   name: svc-api
 spec:
-  type: NodeProt
+  type: NodePort
   selector:
     app: flask-api
   ports:
