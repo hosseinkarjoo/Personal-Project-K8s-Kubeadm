@@ -16,6 +16,7 @@ pipeline {
             steps{
                 script {
                     try {
+                        sh'sed -ie "s/efsID/${efsID}/g" deployment-docker-reg.yml'
                         sh'sudo kubectl apply -k "github.com/kubernetes-sigs/aws-efs-csi-driver/deploy/kubernetes/overlays/stable/?ref=release-1.0"'
                     } catch (err) {
                         echo err.getMessage()
