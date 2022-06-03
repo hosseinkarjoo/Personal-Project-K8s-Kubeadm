@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: api
-        image: master:31320/api:BUIDNUMBER
+        image: master:31320/api:BUILDNUMBER
         ports:
         - containerPort: 5001
         imagePullPolicy: Always
