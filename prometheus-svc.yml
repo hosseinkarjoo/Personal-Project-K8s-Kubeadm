@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: svc-app
+  name: grafana
 spec:
   type: NodePort
   selector:
