@@ -338,6 +338,7 @@
     - name: run helm shell
       shell: /bin/bash /tmp/get_helm.sh
       when: helm_exists is failed
+      ignore_errors: true
 
 
 - hosts: lb
