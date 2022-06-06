@@ -1,5 +1,5 @@
 upstream jenkins {
-    server 10.0.1.95:8080;
+    server 10.0.1.217:8080;
 }
 
 server {
@@ -10,9 +10,9 @@ server {
 }
 
 upstream flaskapp {
-    server 10.0.2.110:32000;
-    server 10.0.2.163:32000;
-    server 10.0.2.139:32000;
+    server 10.0.2.215:32000;
+    server 10.0.2.154:32000;
+    server 10.0.2.55:32000;
 }
 
 server {
@@ -23,9 +23,9 @@ server {
 }
 
 upstream grafana {
-    server 10.0.2.110:32100;
-    server 10.0.2.163:32100;
-    server 10.0.2.139:32100;
+    server 10.0.2.215:32100;
+    server 10.0.2.154:32100;
+    server 10.0.2.55:32100;
 }
 
 server {
@@ -37,9 +37,9 @@ server {
 }
 
 upstream flaskapi {
-    server 10.0.2.110:32001;
-    server 10.0.2.163:32001;
-    server 10.0.2.139:32001;
+    server 10.0.2.215:32001;
+    server 10.0.2.154:32001;
+    server 10.0.2.55:32001;
 }
 
 server {
@@ -50,9 +50,9 @@ server {
 }
 
 upstream kibanai {
-    server 10.0.2.110:32200;
-    server 10.0.2.163:32200;
-    server 10.0.2.139:32200;
+    server 10.0.2.215:32200;
+    server 10.0.2.154:32200;
+    server 10.0.2.55:32200;
 }
 
 server {

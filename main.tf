@@ -341,22 +341,6 @@ resource "aws_efs_mount_target" "efs-mount-docker" {
    security_groups = ["${aws_security_group.private.id}"]
  }
 
-resource "aws_efs_file_system" "efs-docker2" {
-   creation_token = "efs-example2"
-   performance_mode = "generalPurpose"
-   throughput_mode = "bursting"
-   encrypted = "true"
- tags = {
-     Name = "Efs-docker"
-   }
- }
-
-
-resource "aws_efs_mount_target" "efs-mount-docker2" {
-   file_system_id  = "${aws_efs_file_system.efs-docker2.id}"
-   subnet_id = "${aws_subnet.worker_subnet.id}"
-   security_groups = ["${aws_security_group.private.id}"]
- }
 
 
 data "template_file" "inventory" {
@@ -373,7 +357,6 @@ data "template_file" "inventory" {
     jenkins-pub = "${aws_instance.jenkins.public_ip}"
     jenkins-prv = "${aws_instance.jenkins.private_ip}"    
     efs-id = "${aws_efs_mount_target.efs-mount-docker.file_system_id}"
-    efs-id2 = "${aws_efs_mount_target.efs-mount-docker2.file_system_id}"
   
     master-prv = "${aws_instance.master.private_ip}"
     bastion-prv = "${aws_instance.bastion.private_ip}"
