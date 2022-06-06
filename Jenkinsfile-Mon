@@ -19,6 +19,7 @@ pipeline {
                         sh'sudo /usr/local/bin/helm repo add prometheus-community https://prometheus-community.github.io/helm-charts'
                         sh'sudo /usr/local/bin/helm repo update'
                         sh'sudo /usr/local/bin/helm install kube-prometheus-stack prometheus-community/kube-prometheus-stack'
+                        sh'sudo kubectl apply -f prometheus-svc.yml'
                 }
             }
         }
