@@ -1,0 +1,27 @@
+pipeline {
+    agent {
+        node {
+            label 'prod'
+        }
+    }
+    stages {
+        stage('Clone Git Project') {
+            steps {
+                git url: 'https://github.com/hosseinkarjoo/Personal-Project-K8s-Kubeadm.git', branch: 'master', credentialsId: 'github_creds'
+            }
+        }
+        stage('install Drivers and registry'){
+            steps{
+                script {
+                        sh'sudo kubectl apply -f fluentd-containerd.yml'
+                        sh'sudo /usr/local/bin/helm repo add elastic https://helm.elastic.co'
+                        sh'sudo /usr/local/bin/helm repo update'
+                        sh'sudo /usr/local/bin/helm install elasticsearch elastic/elasticsearch -f ./elastic-helm-values.yaml'
+                        sh'sudo kubectl apply -f kibana.yml'
+                        sh'sudo kubectl apply -f ./elasticsearch/svc-elastic.yml'
+                        
+                }
+            }
+        }
+    }
+}
