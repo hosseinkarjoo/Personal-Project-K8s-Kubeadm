@@ -5,10 +5,10 @@ metadata:
   labels:
     app: kibana
 spec:
-  ports:
   type: NodePort
-  - port: 5601
-    nodePort: 32200
+  ports:
+    - port: 5601
+      nodePort: 32200
   selector:
     app: kibana
 ---
