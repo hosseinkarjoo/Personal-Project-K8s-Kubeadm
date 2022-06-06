@@ -3,3 +3,5 @@ variables.tf
 variables.tfe
 aws_creds
 files/*
+aws_credse
+terraform.tfstate*
