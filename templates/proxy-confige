@@ -1,0 +1,50 @@
+upstream jenkins {
+    server ${jenkins-prv}:8080;
+}
+
+server {
+    listen     8080;
+    location / {
+        proxy_pass http://jenkins;
+    }
+}
+
+upstream flaskapp {
+    server ${worker-1-prv}:32000;
+    server ${worker-2-prv}:32000;
+    server ${worker-prv-3}:32000;
+}
+
+server {
+    listen     80;
+    location / {
+        proxy_pass http://flaskapp;
+    }
+}
+
+upstream grafana {
+    server ${worker-1-prv}:32101;
+    server ${worker-2-prv}:32101;
+    server ${worker-prv-3}:32101;
+}
+
+server {
+    listen     8090;
+    location / {
+        proxy_pass http://grafana;
+    }
+}
+
+upstream flaskapi {
+    server ${worker-1-prv}:32001;
+    server ${worker-2-prv}:32001;
+    server ${worker-prv-3}:32001;
+}
+
+server {
+    listen     8081;
+    location / {
+        proxy_pass http://flaskapi;
+    }
+}
+

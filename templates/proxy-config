@@ -1,5 +1,5 @@
 upstream jenkins {
-    server 10.0.1.95:8080;
+    server ${jenkins-prv}:8080;
 }
 
 server {
@@ -10,9 +10,9 @@ server {
 }
 
 upstream flaskapp {
-    server 10.0.2.110:32000;
-    server 10.0.2.163:32000;
-    server 10.0.2.139:32000;
+    server ${worker-1-prv}:32000;
+    server ${worker-2-prv}:32000;
+    server ${worker-3-prv}:32000;
 }
 
 server {
@@ -23,9 +23,9 @@ server {
 }
 
 upstream grafana {
-    server 10.0.2.110:32100;
-    server 10.0.2.163:32100;
-    server 10.0.2.139:32100;
+    server ${worker-1-prv}:32100;
+    server ${worker-2-prv}:32100;
+    server ${worker-3-prv}:32100;
 }
 
 server {
@@ -37,9 +37,9 @@ server {
 }
 
 upstream flaskapi {
-    server 10.0.2.110:32001;
-    server 10.0.2.163:32001;
-    server 10.0.2.139:32001;
+    server ${worker-1-prv}:32001;
+    server ${worker-2-prv}:32001;
+    server ${worker-3-prv}:32001;
 }
 
 server {
@@ -50,9 +50,9 @@ server {
 }
 
 upstream kibanai {
-    server 10.0.2.110:32200;
-    server 10.0.2.163:32200;
-    server 10.0.2.139:32200;
+    server ${worker-1-prv}:32200;
+    server ${worker-2-prv}:32200;
+    server ${worker-3-prv}:32200;
 }
 
 server {
@@ -61,4 +61,3 @@ server {
         proxy_pass http://kibana;
     }
 }
-

@@ -124,7 +124,15 @@ resource "aws_security_group" "public" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  
+ 
+  ingress {
+    description = "allow anyone on port 8090 grafana"
+    from_port   = 9000
+    to_port     = 9000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+ 
   ingress {
     description = "allow anyone on port 8443"
     from_port   = 8443
@@ -245,7 +253,10 @@ resource "aws_instance" "worker" {
   subnet_id = aws_subnet.worker_subnet.id
   tags = {
     Name = "worker-${count.index}"
-    
+  }
+  root_block_device {
+    volume_size = "16"
+    volume_type = "standard" 
   }
 }
 
@@ -330,6 +341,24 @@ resource "aws_efs_mount_target" "efs-mount-docker" {
    security_groups = ["${aws_security_group.private.id}"]
  }
 
+resource "aws_efs_file_system" "efs-docker2" {
+   creation_token = "efs-example2"
+   performance_mode = "generalPurpose"
+   throughput_mode = "bursting"
+   encrypted = "true"
+ tags = {
+     Name = "Efs-docker"
+   }
+ }
+
+
+resource "aws_efs_mount_target" "efs-mount-docker2" {
+   file_system_id  = "${aws_efs_file_system.efs-docker2.id}"
+   subnet_id = "${aws_subnet.worker_subnet.id}"
+   security_groups = ["${aws_security_group.private.id}"]
+ }
+
+
 data "template_file" "inventory" {
   template = "${file("./templates/inventory.ini")}"
   vars = {
@@ -344,8 +373,8 @@ data "template_file" "inventory" {
     jenkins-pub = "${aws_instance.jenkins.public_ip}"
     jenkins-prv = "${aws_instance.jenkins.private_ip}"    
     efs-id = "${aws_efs_mount_target.efs-mount-docker.file_system_id}"
-
-
+    efs-id2 = "${aws_efs_mount_target.efs-mount-docker2.file_system_id}"
+  
     master-prv = "${aws_instance.master.private_ip}"
     bastion-prv = "${aws_instance.bastion.private_ip}"
 
@@ -363,6 +392,25 @@ resource "null_resource" "inventory" {
  }
 }
 
+data "template_file" "proxy-config" {
+  template = "${file("./templates/proxy-config")}"
+  vars = {
+    worker-1-prv = "${aws_instance.worker.0.private_ip}"
+    worker-2-prv = "${aws_instance.worker.1.private_ip}"
+    worker-3-prv = "${aws_instance.worker.2.private_ip}"
+    jenkins-prv = "${aws_instance.jenkins.private_ip}"
+  }
+}
+
+
+resource "null_resource" "proxy-config" {
+  triggers = {
+    template_rendered = "${data.template_file.proxy-config.rendered}"
+  }
+  provisioner "local-exec" {
+    command = "echo '${data.template_file.proxy-config.rendered}' > ./proxy-config"
+ }
+}
 
 resource "aws_key_pair" "sh-key-for-me" {
   key_name = "My_Key"

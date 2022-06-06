@@ -364,11 +364,6 @@
 
     - name: replace proxy config
       copy: src=./proxy-config dest=/etc/nginx/sites-available/proxy-config
-    - name: replace the jenkins ip
-      replace:
-        path: /etc/nginx/sites-available/proxy-config
-        regexp: JENKINS_PRV
-        replace: "{{JENKINS_PRV}}"
 
     - name: debug nginx config
       debug:
