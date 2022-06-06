@@ -16,7 +16,7 @@ pipeline {
                         sh'sudo kubectl apply -f fluentd-containerd.yml'
                         sh'sudo /usr/local/bin/helm repo add elastic https://helm.elastic.co'
                         sh'sudo /usr/local/bin/helm repo update'
-                        sh'sudo /usr/local/bin/helm install elasticsearch elastic/elasticsearch -f ./elastic-helm-values.yaml'
+                        sh'sudo /usr/local/bin/helm install elasticsearch elastic/elasticsearch -f ./elastic-helm-values.yml'
                         sh'sudo kubectl apply -f kibana.yml'
                         sh'sudo kubectl apply -f ./elasticsearch/svc-elastic.yml'
                         
