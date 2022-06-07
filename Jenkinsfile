@@ -18,7 +18,9 @@ pipeline {
                 script {
                     try {
                         sh'sed -ie "s/efsID/${efsID}/g" deployment-docker-reg.yml'
-                        sh'sudo kubectl apply -k "github.com/kubernetes-sigs/aws-efs-csi-driver/deploy/kubernetes/overlays/stable/?ref=release-1.3"'
+                        sh'sudo /usr/local/bin/helm repo add aws-efs-csi-driver https://kubernetes-sigs.github.io/aws-efs-csi-driver'
+                        sh'/usr/local/bin/helm repo update'
+                        sh'/usr/local/bin/helm install aws-efs-csi-driver aws-efs-csi-driver/aws-efs-csi-driver'
                     } catch (err) {
                         echo err.getMessage()
                     }
