@@ -13,19 +13,21 @@ pipeline {
                 git url: 'https://github.com/hosseinkarjoo/Personal-Project-K8s-Kubeadm.git', branch: 'master', credentialsId: 'github_creds'
             }
         }
+        stage('install Drivers'){
+            steps{
+                script {
+                    sh'sed -ie "s/efsID/${efsID}/g" deployment-docker-reg.yml'
+                    sh'sudo /usr/local/bin/helm repo add aws-efs-csi-driver https://kubernetes-sigs.github.io/aws-efs-csi-driver'
+                    sh'/usr/local/bin/helm repo update'
+                    sh'/usr/local/bin/helm install aws-efs-csi-driver aws-efs-csi-driver/aws-efs-csi-driver'
+                }
+            }
+        }
         stage('install Drivers and registry'){
             steps{
                 script {
-                    try {
-                        sh'sed -ie "s/efsID/${efsID}/g" deployment-docker-reg.yml'
-                        sh'sudo /usr/local/bin/helm repo add aws-efs-csi-driver https://kubernetes-sigs.github.io/aws-efs-csi-driver'
-                        sh'/usr/local/bin/helm repo update'
-                        sh'/usr/local/bin/helm install aws-efs-csi-driver aws-efs-csi-driver/aws-efs-csi-driver'
-                    } catch (err) {
-                        echo err.getMessage()
-                    }
+                    sh'sudo kubectl apply -f deployment-docker-reg.yml'
                 }
-                sh'sudo kubectl apply -f deployment-docker-reg.yml'
             }
         }
         stage('wait for registry to be ready'){
