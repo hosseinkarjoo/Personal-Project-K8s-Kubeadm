@@ -250,6 +250,7 @@ resource "aws_instance" "worker" {
   key_name = aws_key_pair.sh-key-for-me.key_name
   associate_public_ip_address = false
   vpc_security_group_ids = [aws_security_group.private.id]
+  iam_instance_profile = "${aws_iam_instance_profile.CSI_profile.name}"  
   subnet_id = aws_subnet.worker_subnet.id
   tags = {
     Name = "worker-${count.index}"
@@ -267,6 +268,7 @@ resource "aws_instance" "master" {
   key_name = aws_key_pair.sh-key-for-me.key_name
   associate_public_ip_address = false
   vpc_security_group_ids = [aws_security_group.private.id]
+  iam_instance_profile = "${aws_iam_instance_profile.CSI_profile.name}"
   subnet_id = aws_subnet.worker_subnet.id
   tags = {
     Name = "master"
@@ -407,6 +409,68 @@ data "aws_ami" "amzn-linux-ec2" {
     name   = "name"
     values = ["amzn2-ami-hvm-*-x86_64-ebs"]
   }
+}
+
+resource "aws_iam_role_policy" "EFS-CSI" {
+  name = "efs-csi"
+  role = aws_iam_role.CSI.id
+  policy = jsonencode({
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": [
+          "elasticfilesystem:DescribeAccessPoints",
+          "elasticfilesystem:DescribeFileSystems"
+        ],
+        "Resource": "*"
+      },
+      {
+        "Effect": "Allow",
+        "Action": [
+          "elasticfilesystem:CreateAccessPoint"
+        ],
+        "Resource": "*",
+        "Condition": {
+          "StringLike": {
+            "aws:RequestTag/efs.csi.aws.com/cluster": "true"
+          }
+        }
+      },
+      {
+        "Effect": "Allow",
+        "Action": "elasticfilesystem:DeleteAccessPoint",
+        "Resource": "*",
+        "Condition": {
+          "StringEquals": {
+            "aws:ResourceTag/efs.csi.aws.com/cluster": "true"
+          }
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_iam_role" "CSI" {
+  name = "CSI"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_iam_instance_profile" "CSI_profile" {
+  name = "CSI_profile"
+  role = "${aws_iam_role.CSI.name}"
 }
 
 
